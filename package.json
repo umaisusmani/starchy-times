@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "window": "python3 launch.py"
+    "window": "python3 launch.py",
+    "setup": "bash setup.sh"
   },
   "dependencies": {
     "@fontsource/anton": "^5.3.0",
@@ -14,5 +15,12 @@
     "@fontsource/special-elite": "^5.3.0",
     "gridstack": "^14.0.0"
   },
-  "private": true
+  "private": true,
+  "keywords": [
+    "pomodoro",
+    "dashboard",
+    "productivity",
+    "timer",
+    "ambient-sound"
+  ]
 }
