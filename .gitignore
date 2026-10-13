@@ -1,0 +1,11 @@
+node_modules/
+__pycache__/
+*.pyc
+*.tmp
+
+# personal data: tasks, scratchpad, saved layout, settings
+data/
+
+# your own collage photos stay local
+public/collage/*
+!public/collage/.gitkeep

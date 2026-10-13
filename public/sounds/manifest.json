@@ -1,0 +1,119 @@
+{
+  "sounds": [
+    {
+      "id": "cicadas",
+      "label": "Cicadas",
+      "group": "Nature",
+      "file": "/sounds/cicadas.ogg"
+    },
+    {
+      "id": "forest",
+      "label": "Forest and birds",
+      "group": "Nature",
+      "file": "/sounds/forest.ogg"
+    },
+    {
+      "id": "frogs",
+      "label": "Frog pond",
+      "group": "Nature",
+      "file": "/sounds/frogs.ogg"
+    },
+    {
+      "id": "night",
+      "label": "Night countryside",
+      "group": "Nature",
+      "file": "/sounds/night.ogg"
+    },
+    {
+      "id": "wind",
+      "label": "Wind in the trees",
+      "group": "Nature",
+      "file": "/sounds/wind.ogg"
+    },
+    {
+      "id": "brook",
+      "label": "Gentle brook",
+      "group": "Water & rain",
+      "file": "/sounds/brook.ogg"
+    },
+    {
+      "id": "stream",
+      "label": "Mountain stream",
+      "group": "Water & rain",
+      "file": "/sounds/stream.ogg"
+    },
+    {
+      "id": "ocean",
+      "label": "Ocean waves",
+      "group": "Water & rain",
+      "file": "/sounds/ocean.ogg"
+    },
+    {
+      "id": "rain",
+      "label": "Rain",
+      "group": "Water & rain",
+      "file": "/sounds/rain.ogg"
+    },
+    {
+      "id": "tent",
+      "label": "Rain in a tent",
+      "group": "Water & rain",
+      "file": "/sounds/tent.ogg"
+    },
+    {
+      "id": "glass",
+      "label": "Rain on glass",
+      "group": "Water & rain",
+      "file": "/sounds/glass.ogg"
+    },
+    {
+      "id": "waterfall",
+      "label": "Small waterfall",
+      "group": "Water & rain",
+      "file": "/sounds/waterfall.ogg"
+    },
+    {
+      "id": "fire",
+      "label": "Fireplace",
+      "group": "Cozy",
+      "file": "/sounds/fire.ogg"
+    },
+    {
+      "id": "hum",
+      "label": "Warm machine hum",
+      "group": "Cozy",
+      "file": "/sounds/hum.ogg"
+    },
+    {
+      "id": "ferry",
+      "label": "Ferry engine",
+      "group": "Travel",
+      "file": "/sounds/ferry.ogg"
+    },
+    {
+      "id": "highway",
+      "label": "Highway hum",
+      "group": "Travel",
+      "file": "/sounds/highway.ogg"
+    },
+    {
+      "id": "train",
+      "label": "Train carriage",
+      "group": "Travel",
+      "file": "/sounds/train.ogg"
+    },
+    {
+      "id": "cafe",
+      "label": "Cafe",
+      "group": "City",
+      "file": "/sounds/cafe.ogg"
+    },
+    {
+      "id": "street",
+      "label": "City street",
+      "group": "City",
+      "file": "/sounds/street.ogg"
+    }
+  ],
+  "credit": "Field recordings by Joseph Sardin, BigSoundBank.com (CC0 1.0 public domain)"
+}
