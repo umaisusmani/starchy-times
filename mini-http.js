@@ -86,7 +86,7 @@ function createApp() {
       if ((req.method === 'GET' || req.method === 'HEAD') && serveStatic(url.pathname, res)) return;
       res.status(404).json({ error: 'not found' });
     } catch (e) {
-      if (!res.headersSent) res.status(e.status || 500).json({ error: e.message });
+      if (!res.headersSent) res.status(e.status || 500).json({ error: e.code === 'ENOSPC' ? 'The disk is full, so nothing could be saved' : e.message });
       else res.end();
     }
   }

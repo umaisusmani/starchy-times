@@ -11,9 +11,6 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 app.static('', path.join(__dirname, 'public'));
 app.static('/vendor/gridstack', path.join(__dirname, 'node_modules/gridstack/dist'));
-for (const [route, pkg] of [['anton', 'anton'], ['playfair', 'playfair-display'], ['elite', 'special-elite'], ['marker', 'permanent-marker']]) {
-  app.static('/fonts/' + route, path.join(__dirname, 'node_modules/@fontsource', pkg, 'files'));
-}
 const COLLAGE_DIR = path.join(__dirname, 'public', 'collage');
 fs.mkdirSync(COLLAGE_DIR, { recursive: true });
 app.get('/api/collage', (_, res) => {
@@ -40,8 +37,13 @@ function readJson(file, fallback) {
 }
 function atomicWrite(file, text) {
   const tmp = file + '.tmp';
-  fs.writeFileSync(tmp, text);
-  fs.renameSync(tmp, file);
+  try {
+    fs.writeFileSync(tmp, text);
+    fs.renameSync(tmp, file);
+  } catch (e) {
+    try { fs.unlinkSync(tmp); } catch {}
+    throw e;
+  }
 }
 function writeJson(file, data) { atomicWrite(file, JSON.stringify(data)); }
 
@@ -480,6 +482,10 @@ const CLEAN_OPS = [
     targets: async () => entriesOf(path.join(HOME, '.cache/pip')) },
   { id: 'thumbs', label: 'Image thumbnails', checked: true, desc: 'Rebuilt as you browse folders.',
     targets: async () => entriesOf(path.join(HOME, '.cache/thumbnails')) },
+  { id: 'vscode-installers', label: 'VS Code extension installers', checked: true, desc: 'Downloaded installers of extensions you already have. VS Code fetches them again only if you reinstall.',
+    targets: async () => entriesOf(path.join(HOME, '.config/Code/CachedExtensionVSIXs')) },
+  { id: 'npx-cache', label: 'npx tool cache', checked: false, desc: 'Tools run through npx (Prisma and friends). Downloaded again the next time you run them, so you need internet.',
+    targets: async () => entriesOf(path.join(HOME, '.npm/_npx')) },
   { id: 'chrome', label: 'Chrome cache', checked: false, desc: 'Temporary web files. Sites load a bit slower once.',
     targets: async () => entriesOf(path.join(HOME, '.cache/google-chrome')).flatMap(profile => ['Cache', 'Code Cache', 'GPUCache'].flatMap(sub => entriesOf(path.join(profile, sub)))) },
   { id: 'dev-downloads', label: 'Dev tool downloads', checked: false, desc: 'Electron, Prisma engines, TypeScript. Downloaded again when a project needs them.',

@@ -64,7 +64,16 @@ alias dashboard='python3 /path/to/starchy-times/launch.py &'
 
 **Settings** (top right) has timer lengths, auto-start, sound choice and volume, and the theme.
 
-**Themes:** Newsprint, Midnight, Candy, Forest, Sunset, Mono.
+**Themes:** each one changes colours, typefaces, corner shapes, shadows and header patterns.
+
+| Theme | Feel |
+|---|---|
+| Newsprint | the default: condensed headlines, typewriter body, halftone dots, taped panels |
+| Midnight (arcade) | dark, wide techno type, sharp corners, neon shadows, scanlines on a grid |
+| Candy (bubble) | pastel, rounded type, pill buttons, polka dots |
+| Forest (field notes) | condensed labels, serif brand, hatched headers |
+| Sunset (retro diner) | display type, chunky rounded panels, racing stripes |
+| Mono (swiss) | heavy grotesque, monospaced text, no ornament |
 
 **Sounds:** 19 field recordings plus brown, pink and white noise, with a Preview button.
 
@@ -119,6 +128,8 @@ the volume isn't at zero. **Preview** plays it without the timer.
 
 **Panels are in a weird place.** **Reset layout** in the top bar.
 
+**"Couldn't save" or a red LOW DISK tag.** Your disk is full. Nothing is lost: the timer and settings stay as they were. Use **Free space**, or find the culprit with `sudo du -xh / --max-depth=2 | sort -h | tail`.
+
 **The port Nuke says it couldn't stop something.** That process belongs to another user. The
 panel shows the exact `sudo` command to run.
 
@@ -128,4 +139,4 @@ panel shows the exact `sudo` command to run.
   under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). They were trimmed to at most 150 s,
   made mono, and loudness-matched.
 - Panel layout by [GridStack](https://gridstackjs.com/) (MIT).
-- Fonts via [Fontsource](https://fontsource.org/): Anton, Playfair Display, Special Elite, Permanent Marker (all SIL OFL).
+- Fonts (SIL Open Font License, via [Fontsource](https://fontsource.org/), latin subsets in `public/fonts/`): Anton, Playfair Display, Special Elite, Permanent Marker, Orbitron, Space Mono, Fredoka, Pacifico, Nunito, Oswald, Lora, Courier Prime, Righteous, Abril Fatface, Archivo Black, IBM Plex Mono.
