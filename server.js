@@ -29,6 +29,7 @@ const KV_FILE = path.join(DATA_DIR, 'kv.json');
 const DEFAULT_SETTINGS = {
   work: 25, shortBreak: 5, longBreak: 15, longBreakEvery: 4,
   autoStart: false, noise: true, noiseType: 'stream', noiseVolume: 0.15, noiseDuringBreaks: false, chime: true,
+  chimeStyle: 'classic',
   theme: 'newsprint', lite: false,
 };
 
@@ -49,6 +50,7 @@ function writeJson(file, data) { atomicWrite(file, JSON.stringify(data)); }
 
 // ── Tasks (two lists: work + personal) ──
 const LISTS = ['work', 'personal'];
+const CHIME_STYLES = ['classic', 'bell', 'marimba', 'digital'];
 const loadTasks = () => readJson(TASKS_FILE, []).map(t => ({ ...t, list: t.list === 'personal' ? 'personal' : 'work' }));
 const saveTasks = tasks => { writeJson(TASKS_FILE, tasks); return tasks; };
 
@@ -126,6 +128,7 @@ app.put('/api/settings', (req, res) => {
   merged.noiseType = String(merged.noiseType).toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30) || 'stream';
   merged.theme = String(merged.theme).toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30) || 'newsprint';
   merged.lite = !!merged.lite;
+  if (!CHIME_STYLES.includes(merged.chimeStyle)) merged.chimeStyle = 'classic';
   writeJson(SETTINGS_FILE, merged);
   res.json(merged);
 });
@@ -550,5 +553,6 @@ app.post('/api/cleanup/run', async (req, res) => {
     cleaning = false;
   }
 });
+
 
 app.listen(PORT, '127.0.0.1', () => console.log(`Starchy Times running at http://localhost:${PORT}`));
