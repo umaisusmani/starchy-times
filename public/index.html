@@ -346,6 +346,26 @@
     .tgt:hover { background: var(--yellow); }
     .task.focus .tgt { background: var(--pink); }
     .task-list { min-height: 44px; }
+    .task[hidden] { display: none; }
+    .task.in-group { margin-left: 14px; }
+    .group-head {
+      display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 5px 6px; cursor: pointer; user-select: none;
+      background: color-mix(in srgb, var(--tone) 35%, var(--paper)); border: 2px solid var(--ink); border-radius: var(--rbtn);
+      font: 700 13px var(--f-type);
+    }
+    .group-head:first-child { margin-top: 0; }
+    .gtoggle { flex: none; width: 18px; height: 18px; padding: 0; border: 0; background: none; color: inherit; font-size: 12px; line-height: 1; cursor: pointer; transition: transform .12s; transform: rotate(90deg); }
+    .group-head.closed .gtoggle { transform: none; }
+    .gname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: text; }
+    .gname:hover { background: color-mix(in srgb, var(--yellow) 55%, transparent); }
+    .gcount { flex: none; font: 400 12px var(--f-type); opacity: .75; }
+    .gadd { flex: none; width: 20px; height: 20px; padding: 0; border: var(--bw2) solid var(--ink); background: var(--card); color: inherit; font: 700 15px/1 var(--f-type); cursor: pointer; border-radius: var(--rbtn); }
+    .gadd:hover { background: var(--lime); }
+    .group-head:hover .del { opacity: 1; }
+    .group-edit { flex: 1; min-width: 0; background: var(--card); border: var(--bw2) solid var(--ink); padding: 2px 6px; font: 700 13px var(--f-type); color: var(--ink); }
+    .group-empty { padding: 8px 6px 4px 28px; font: 400 14px var(--f-hand); opacity: .7; }
+    .add-row .add-folder { font-size: 15px; padding: 0 9px; }
+    .add-row input.group-target { box-shadow: 0 0 0 3px var(--pink); }
     .widget.drop-target { outline: 4px dashed var(--pink); outline-offset: -4px; }
     .task.dragging { background: var(--yellow); box-shadow: var(--sh3); position: relative; z-index: 3; }
     .task.dragging .grip { cursor: grabbing; opacity: 1; }
@@ -554,7 +574,7 @@
       <div class="grid-stack-item-content widget tone-lime taped" id="w-tasks">
         <div class="widget-head"><span>Work checklist</span><span class="head-tools"><span class="status" id="task-count-work"></span><button class="small-btn" data-clear="work">Clear done</button></span></div>
         <div class="widget-body">
-          <div class="add-row"><input class="task-input" id="task-input-work" data-list="work" placeholder="Add a work task... (N)" autocomplete="off"><button data-add="work" title="Add">+</button></div>
+          <div class="add-row"><input class="task-input" id="task-input-work" data-list="work" placeholder="Add a work task... (N)" autocomplete="off"><button data-add="work" title="Add">+</button><button data-newgroup="work" class="add-folder" title="New folder">&#128193;</button></div>
           <div class="task-list" id="task-list-work" data-list="work"></div>
         </div>
       </div>
@@ -582,7 +602,7 @@
       <div class="grid-stack-item-content widget tone-orange taped" id="w-personal">
         <div class="widget-head"><span>Personal checklist</span><span class="head-tools"><span class="status" id="task-count-personal"></span><button class="small-btn" data-clear="personal">Clear done</button></span></div>
         <div class="widget-body">
-          <div class="add-row"><input class="task-input" id="task-input-personal" data-list="personal" placeholder="Add a personal task..." autocomplete="off"><button data-add="personal" title="Add">+</button></div>
+          <div class="add-row"><input class="task-input" id="task-input-personal" data-list="personal" placeholder="Add a personal task..." autocomplete="off"><button data-add="personal" title="Add">+</button><button data-newgroup="personal" class="add-folder" title="New folder">&#128193;</button></div>
           <div class="task-list" id="task-list-personal" data-list="personal"></div>
         </div>
       </div>
@@ -1399,6 +1419,19 @@ const LISTS = ['work', 'personal'];
 const LIST_LABEL = { work: 'Work', personal: 'Personal' };
 let tasks = [];
 let focusIds = { work: null, personal: null };
+// Folders per list: [{ id, name, collapsed }]. A task joins one through its `group` id; ungrouped tasks sit above the folders.
+let taskGroups = { work: [], personal: [] };
+const addTarget = { work: null, personal: null };   // folder the next typed task goes into
+const saveGroups = () => kvSet('taskGroups', taskGroups);
+const normalizeGroups = raw => {
+  const out = { work: [], personal: [] };
+  for (const l of LISTS) {
+    for (const g of (raw && Array.isArray(raw[l]) ? raw[l] : [])) {
+      if (g && typeof g.id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(g.id)) out[l].push({ id: g.id, name: String(g.name || 'Folder').slice(0, 60), collapsed: !!g.collapsed });
+    }
+  }
+  return out;
+};
 
 const listTasks = l => tasks.filter(t => t.list === l);
 const saveFocus = () => kvSet('focusTasks', focusIds);
@@ -1428,18 +1461,35 @@ function renderList(l) {
   const done = items.filter(t => t.done).length;
   $('task-count-' + l).textContent = items.length ? `${done}/${items.length}` : '';
   const el = $('task-list-' + l);
-  if (!items.length) {
+  const groups = taskGroups[l];
+  if (!items.length && !groups.length) {
     el.innerHTML = `<div class="empty">${l === 'work' ? 'Nothing here yet &mdash; add your first task' : 'Nothing personal yet &mdash; add one above'}</div>`;
     return;
   }
-  el.innerHTML = [...items.filter(t => !t.done), ...items.filter(t => t.done)].map(t => `
-    <div class="task ${t.done ? 'done' : ''} ${t.id === focusIds[l] && !t.done ? 'focus' : ''}" data-id="${t.id}">
-      <span class="grip ${t.done ? 'off' : ''}" title="Drag to reorder or move to the other list"></span>
+  const inGroup = new Map(groups.map(g => [g.id, []]));
+  const loose = [];
+  for (const t of items) (inGroup.has(t.group) ? inGroup.get(t.group) : loose).push(t);
+  const ordered = arr => [...arr.filter(t => !t.done), ...arr.filter(t => t.done)];
+  const row = (t, folder) => `
+    <div class="task ${t.done ? 'done' : ''} ${t.id === focusIds[l] && !t.done ? 'focus' : ''} ${folder ? 'in-group' : ''}" data-id="${t.id}"${folder && folder.collapsed ? ' hidden' : ''}>
+      <span class="grip ${t.done ? 'off' : ''}" title="Drag to reorder, or into a folder or the other list"></span>
       <div class="check" data-act="toggle"></div>
       <span class="task-text" data-act="edit" title="Click to edit"><span class="tt" data-act="edit">${esc(t.text)}</span></span>
       ${t.done ? '' : '<button class="tgt" data-act="focus" title="Focus the timer on this task"></button>'}
       <button class="del" data-act="del" title="Delete">&times;</button>
-    </div>`).join('');
+    </div>`;
+  el.innerHTML = ordered(loose).map(t => row(t, null)).join('') + groups.map(g => {
+    const ts = ordered(inGroup.get(g.id)), doneN = ts.filter(t => t.done).length;
+    return `
+    <div class="group-head ${g.collapsed ? 'closed' : ''}" data-group="${g.id}">
+      <button class="gtoggle" data-gact="toggle" aria-expanded="${!g.collapsed}" title="${g.collapsed ? 'Open' : 'Close'} folder">&#9654;</button>
+      <span class="gname" data-gact="rename" title="Click to rename">${esc(g.name)}</span>
+      <span class="gcount">${ts.length ? `${doneN}/${ts.length}` : ''}</span>
+      <button class="gadd" data-gact="add" title="Add a task to this folder">+</button>
+      <button class="del" data-gact="del" title="Delete folder (its tasks stay in the list)">&times;</button>
+    </div>` + ts.map(t => row(t, g)).join('') +
+      (!ts.length && !g.collapsed ? '<div class="group-empty">Empty folder &mdash; drag tasks here</div>' : '');
+  }).join('');
 }
 
 function renderTasks() {
@@ -1452,7 +1502,8 @@ async function addTask(l) {
   const input = $('task-input-' + l), text = input.value.trim();
   if (!text) return;
   input.value = '';
-  tasks = await api('POST', '/api/tasks', { text, list: l });
+  const g = taskGroups[l].find(x => x.id === addTarget[l]);
+  tasks = await api('POST', '/api/tasks', { text, list: l, group: g ? g.id : undefined });
   const added = listTasks(l).pop();
   if (focusIds[l] === null && added) { focusIds[l] = added.id; saveFocus(); }
   renderTasks();
@@ -1469,6 +1520,79 @@ document.querySelectorAll('.task-list').forEach(listEl => listEl.addEventListene
   else if (act === 'edit') { startEdit(row, id); return; }
   renderTasks();
 }));
+
+function setAddTarget(l, id) {
+  const g = taskGroups[l].find(x => x.id === id);
+  addTarget[l] = g ? g.id : null;
+  const input = $('task-input-' + l);
+  input.classList.toggle('group-target', !!g);
+  input.placeholder = g ? `Add to \u201C${g.name}\u201D...` : (l === 'work' ? 'Add a work task... (N)' : 'Add a personal task...');
+}
+
+function startGroupEdit(nameEl, l, id) {
+  const g = taskGroups[l].find(x => x.id === id);
+  if (!g || nameEl.querySelector('input') || nameEl.tagName === 'INPUT') return;
+  const input = document.createElement('input');
+  input.className = 'group-edit';
+  input.maxLength = 60;
+  input.value = g.name;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+  let finished = false;
+  const finish = save => {
+    if (finished) return;
+    finished = true;
+    const v = input.value.trim();
+    if (save && v && v !== g.name) { g.name = v.slice(0, 60); saveGroups(); }
+    if (addTarget[l] === id) setAddTarget(l, id);
+    renderTasks();
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') finish(true); else if (e.key === 'Escape') finish(false); });
+  input.addEventListener('blur', () => finish(true));
+  input.addEventListener('click', e => e.stopPropagation());
+}
+
+function newGroup(l) {
+  const g = { id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: 'New folder', collapsed: false };
+  taskGroups[l].push(g);
+  saveGroups();
+  renderTasks();
+  const head = document.querySelector(`#task-list-${l} .group-head[data-group="${g.id}"]`);
+  if (head) { head.scrollIntoView({ block: 'nearest' }); startGroupEdit(head.querySelector('.gname'), l, g.id); }
+}
+
+document.querySelectorAll('.task-list').forEach(listEl => listEl.addEventListener('click', async e => {
+  const head = e.target.closest('.group-head');
+  if (!head) return;
+  const l = listEl.dataset.list, id = head.dataset.group, g = taskGroups[l].find(x => x.id === id);
+  if (!g) return;
+  const act = e.target.dataset.gact;
+  if (act === 'rename') { startGroupEdit(e.target, l, id); return; }
+  if (act === 'del') {
+    const ids = listTasks(l).filter(t => t.group === id).map(t => t.id);
+    if (ids.length) tasks = await api('POST', '/api/tasks/assign', { ids, group: null });
+    taskGroups[l] = taskGroups[l].filter(x => x.id !== id);
+    if (addTarget[l] === id) setAddTarget(l, null);
+    saveGroups();
+  } else if (act === 'add') {
+    g.collapsed = false;
+    saveGroups();
+    setAddTarget(l, id);
+    renderTasks();
+    $('task-input-' + l).focus();
+    return;
+  } else {
+    g.collapsed = !g.collapsed;
+    saveGroups();
+  }
+  renderTasks();
+}));
+document.querySelectorAll('.task-input').forEach(i => {
+  i.addEventListener('blur', () => { if (!i.value.trim() && addTarget[i.dataset.list]) setAddTarget(i.dataset.list, null); });
+  i.addEventListener('keydown', e => { if (e.key === 'Escape') { i.value = ''; setAddTarget(i.dataset.list, null); i.blur(); } });
+});
+document.querySelectorAll('[data-newgroup]').forEach(b => { b.onclick = () => newGroup(b.dataset.newgroup); });
 
 function startEdit(row, id) {
   const span = row.querySelector('.task-text');
@@ -1513,14 +1637,26 @@ document.addEventListener('pointerdown', e => {
     lists.forEach(l => l.closest('.widget').classList.toggle('drop-target', l === over && l !== origin));
     const empty = target.querySelector('.empty');
     if (empty) empty.remove();
+    // Folder headers are drop boundaries too: above a header joins the folder before it, below joins that folder.
     let before = null;
-    for (const r of target.querySelectorAll('.task:not(.done)')) {
-      if (r === row) continue;
+    for (const r of target.children) {
+      if (r === row || r.classList.contains('done') || !(r.classList.contains('task') || r.classList.contains('group-head'))) continue;
       const b = r.getBoundingClientRect();
+      if (!b.height) continue;                       // a task inside a closed folder
       if (ev.clientY < b.top + b.height / 2) { before = r; break; }
     }
-    const ref = before || target.querySelector('.task.done');
+    let ref = before;
+    if (!ref) {                                       // below everything: last open slot of the last section
+      const heads = target.querySelectorAll('.group-head');
+      const from = heads.length ? heads[heads.length - 1] : null;
+      for (let n = from ? from.nextElementSibling : target.firstElementChild; n; n = n.nextElementSibling) {
+        if (n !== row && n.classList.contains('task') && n.classList.contains('done')) { ref = n; break; }
+      }
+    }
     if (row.parentElement !== target || row.nextElementSibling !== ref) target.insertBefore(row, ref);
+    let owner = row.previousElementSibling;
+    while (owner && !owner.classList.contains('group-head')) owner = owner.previousElementSibling;
+    row.classList.toggle('in-group', !!owner);
     const scroller = target.closest('.widget-body'), sb = scroller.getBoundingClientRect();
     if (ev.clientY < sb.top + 24) scroller.scrollTop -= 14;
     else if (ev.clientY > sb.bottom - 24) scroller.scrollTop += 14;
@@ -1534,9 +1670,22 @@ document.addEventListener('pointerdown', e => {
     document.body.classList.remove('interacting');
     lists.forEach(l => l.closest('.widget').classList.remove('drop-target'));
     const from = origin.dataset.list, to = row.parentElement.dataset.list;
-    const payload = {};
-    for (const l of lists) payload[l.dataset.list] = [...l.querySelectorAll('.task')].map(r => parseInt(r.dataset.id));
-    tasks = await api('POST', '/api/tasks/reorder', { lists: payload });
+    // Read the order and each task's folder straight off the DOM: a task belongs to the nearest header above it.
+    const payload = {}, groups = {};
+    for (const l of lists) {
+      const ids = [];
+      let cur = null;
+      for (const n of l.children) {
+        if (n.classList.contains('group-head')) cur = n.dataset.group;
+        else if (n.classList.contains('task')) { const tid = parseInt(n.dataset.id); ids.push(tid); groups[tid] = cur; }
+      }
+      payload[l.dataset.list] = ids;
+    }
+    let owner = row.previousElementSibling;
+    while (owner && !owner.classList.contains('group-head')) owner = owner.previousElementSibling;
+    const into = owner && taskGroups[row.parentElement.dataset.list].find(g => g.id === owner.dataset.group);
+    if (into && into.collapsed) { into.collapsed = false; saveGroups(); }   // show where it went
+    tasks = await api('POST', '/api/tasks/reorder', { lists: payload, groups });
     if (from !== to && focusIds[from] === id && focusIds[to] === null) { focusIds[to] = id; focusIds[from] = null; saveFocus(); }
     renderTasks();
   };
@@ -1859,9 +2008,10 @@ document.addEventListener('keydown', e => {
   try { catalog = await (await fetch('/sounds/manifest.json')).json(); } catch {}
   await loadLayout();
   initCollage();
-  const [t, fOld, fNew, d, s, pp, savedTimer] = await Promise.all([
-    api('GET', '/api/tasks'), kvGet('focusTask'), kvGet('focusTasks'), kvGet('daily'), api('GET', '/api/scratch'), kvGet('ports'), kvGet('timer'),
+  const [t, fOld, fNew, d, s, pp, savedTimer, savedGroups] = await Promise.all([
+    api('GET', '/api/tasks'), kvGet('focusTask'), kvGet('focusTasks'), kvGet('daily'), api('GET', '/api/scratch'), kvGet('ports'), kvGet('timer'), kvGet('taskGroups'),
   ]);
+  taskGroups = normalizeGroups(savedGroups);
   if (Array.isArray(pp)) pinned = pp.filter(n => Number.isInteger(n) && n >= 1 && n <= 65535);
   renderPorts();
   refreshPorts();

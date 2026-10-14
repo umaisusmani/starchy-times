@@ -53,6 +53,9 @@ const LISTS = ['work', 'personal'];
 const CHIME_STYLES = ['classic', 'bell', 'marimba', 'digital'];
 const loadTasks = () => readJson(TASKS_FILE, []).map(t => ({ ...t, list: t.list === 'personal' ? 'personal' : 'work' }));
 const saveTasks = tasks => { writeJson(TASKS_FILE, tasks); return tasks; };
+// Folders: a task may carry the id of a folder in its list. The folders themselves (names, collapsed) live in the kv store.
+const validGroup = v => (typeof v === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(v) ? v : null);
+const setGroup = (t, g) => { if (g) t.group = g; else delete t.group; };
 
 app.get('/api/tasks', (_, res) => res.json(loadTasks()));
 
@@ -62,7 +65,8 @@ app.post('/api/tasks', (req, res) => {
   const tasks = loadTasks();
   let id = Date.now();
   while (tasks.some(t => t.id === id)) id++;
-  if (text) tasks.push({ id, text, done: false, list });
+  const group = validGroup(req.body.group);
+  if (text) tasks.push({ id, text, done: false, list, ...(group ? { group } : {}) });
   res.json(saveTasks(tasks));
 });
 
@@ -86,8 +90,23 @@ app.post('/api/tasks/reorder', (req, res) => {
       if (t) t.list = list;
     });
   }
+  // Optional { taskId: folderId | null }: where each dragged task ended up.
+  const groups = req.body.groups && typeof req.body.groups === 'object' ? req.body.groups : {};
+  for (const [rawId, g] of Object.entries(groups)) {
+    const t = tasks.find(t => t.id === Number(rawId));
+    if (t) setGroup(t, validGroup(g));
+  }
   const r = t => (rank.has(t.id) ? rank.get(t.id) : 1e9);
   tasks.sort((a, b) => (a.list === b.list ? 0 : a.list === 'work' ? -1 : 1) || r(a) - r(b));
+  res.json(saveTasks(tasks));
+});
+
+// Put tasks into a folder, or take them out (group null). Deleting a folder uses this so its tasks survive.
+app.post('/api/tasks/assign', (req, res) => {
+  const ids = new Set((Array.isArray(req.body.ids) ? req.body.ids : []).map(Number));
+  const group = validGroup(req.body.group);
+  const tasks = loadTasks();
+  for (const t of tasks) if (ids.has(t.id)) setGroup(t, group);
   res.json(saveTasks(tasks));
 });
 
