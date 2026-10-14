@@ -17,7 +17,7 @@ newspaper collage. Everything runs locally on your machine. No account, no cloud
 | Panel | What it does |
 |---|---|
 | **Timer** | Focus, short break and long break with lengths you choose. Faint ambient sound while it runs, a chime when a phase ends. It remembers where it was, even after a crash or restart. |
-| **Work + Personal checklists** | Click a task to edit it, drag it to reorder, or drag it into the other list. The round button makes it the task the timer shows. |
+| **Work + Personal checklists** | Click a task to edit it, drag it to reorder, or drag it into the other list. The round button makes it the task the timer shows. **Folders:** the folder button next to the add button makes a collapsible folder in that list. Drag a task into one, or press the **+** on its header to type a task straight into it. Deleting a folder keeps its tasks. |
 | **Clock** | Lahore time (Asia/Karachi). |
 | **PC** | CPU, memory, disk, load and temperature, plus a **Free space** button that shows what it can clear (Trash, npm/pip caches, thumbnails, leftover test-browser folders) before it deletes anything. |
 | **Ports** | Type a port and press **Nuke**. It finds the process, including the parent that would restart it, and stops it. One click for your usual dev ports. |
@@ -62,7 +62,7 @@ alias dashboard='python3 /path/to/starchy-times/launch.py &'
 | `N` | jump to the work checklist's input |
 | `Ctrl+Z` / `Ctrl+Shift+Z` | undo / redo in the scratchpad |
 
-**Settings** (top right) has timer lengths, auto-start, sound choice and volume, and the theme.
+**Settings** (top right) has timer lengths, auto-start, sound choice and volume, the chime sound, and the theme.
 
 **Themes:** each one changes colours, typefaces, corner shapes, shadows and header patterns.
 
@@ -75,7 +75,8 @@ alias dashboard='python3 /path/to/starchy-times/launch.py &'
 | Sunset (retro diner) | display type, chunky rounded panels, racing stripes |
 | Mono (swiss) | heavy grotesque, monospaced text, no ornament |
 
-**Sounds:** 19 field recordings plus brown, pink and white noise, with a Preview button.
+**Sounds:** 19 field recordings, brown, pink and white noise, and four made-up soundscapes (distant thunderstorm, ceiling fan, vinyl crackle, typewriter), with a Preview button.
+**Chime:** classic, bell, marimba or digital beeps, with a Test button.
 
 - Nature: forest and birds, night countryside, cicadas, frog pond, wind in the trees
 - Water and rain: mountain stream, gentle brook, small waterfall, ocean waves, rain, rain on glass, rain in a tent
@@ -88,7 +89,7 @@ join the collage. Hit **Shuffle** to re-roll the layout of the art.
 
 ## Your data
 
-Tasks, scratchpad, layout, timer state and settings live in the `data/` folder next to the app.
+Tasks and their folders, scratchpad, layout, timer state and settings live in the `data/` folder next to the app, so closing the app or the browser loses nothing. A timer that ends while the app is closed is counted when you reopen it.
 It is git-ignored, so it is never uploaded. Back it up by copying the folder.
 
 ## Settings you can change with environment variables
