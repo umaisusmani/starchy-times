@@ -139,5 +139,6 @@ panel shows the exact `sudo` command to run.
 - Field recordings by Joseph Sardin, [BigSoundBank.com](https://bigsoundbank.com), released
   under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). They were trimmed to at most 150 s,
   made mono, and loudness-matched.
+- Thunderstorm recording: "Rain, Long, Thunder" by WuxiaScrub, [OpenGameArt.org](https://opengameart.org/content/rain-long-thunder), CC0.
 - Panel layout by [GridStack](https://gridstackjs.com/) (MIT).
 - Fonts (SIL Open Font License, via [Fontsource](https://fontsource.org/), latin subsets in `public/fonts/`): Anton, Playfair Display, Special Elite, Permanent Marker, Orbitron, Space Mono, Fredoka, Pacifico, Nunito, Oswald, Lora, Courier Prime, Righteous, Abril Fatface, Archivo Black, IBM Plex Mono.
